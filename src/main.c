@@ -20,11 +20,16 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
+#include "dma.h"
+#include "tim.h"
+#include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "printf.h"
+#include "string.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +50,15 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+uint8_t str[] = "USART Transmit  DMA \r \n";
+uint8_t buffer[100];
+uint8_t bufferLen;
+uint8_t data2Send[6000];
+uint16_t data2SendLen = 0;
+uint8_t data2SendCnt = 0;
+volatile uint16_t adcRaw[8] = {0};
+float adcVolt[8] = {10, 10, 10, 10, 10, 10, 10, 10};
+float adcRatio = 5.0 / 4096.0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,6 +81,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
+  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -87,7 +101,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_ADC1_Init();
+  MX_USART1_UART_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
+  // HAL_TIM_Base_Start(&htim2);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adcRaw, 8);
+  HAL_TIM_Base_Start_IT(&htim3);
+  // HAL_TIM_OC_Start(&htim2, 1);
 
   /* USER CODE END 2 */
 
@@ -95,6 +117,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -110,6 +133,7 @@ void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
   /** Initializes the CPU, AHB and APB busses clocks 
   */
@@ -126,7 +150,8 @@ void SystemClock_Config(void)
   }
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -136,10 +161,51 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
+  PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
+{
+  // HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
+  for (size_t i = 0; i < 8; i++)
+  {
+    adcVolt[i] = ((double)adcRaw[i]) * adcRatio;
+  }
+  bufferLen = sprintf_(
+      (char *)buffer,
+      "%lu,%u,%u,%u,%u,%u,%u,%u,%u;",
+      HAL_GetTick(),
+      adcRaw[0], adcRaw[1], adcRaw[2], adcRaw[3],
+      adcRaw[4], adcRaw[5], adcRaw[6], adcRaw[7]);
+  strcat((char *)data2Send, (char *)buffer);
+  data2SendLen += bufferLen;
+  data2SendCnt++;
+  if (data2SendCnt > 49)
+  {
+    bufferLen = sprintf_((char *)buffer, "\n");
+    strcat((char *)data2Send, (char *)buffer);
+    data2SendLen += bufferLen;
+    HAL_UART_Transmit_DMA(&huart1, data2Send, data2SendLen);
+    data2SendCnt = 0;
+    data2SendLen = 0;
+  }
+  // HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
+}
 
+void HAL_UART_TxCpltCallback (UART_HandleTypeDef * huart)
+{
+  sprintf_((char *)data2Send, "");  //Reset Memory Buffer
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+}
 /* USER CODE END 4 */
 
 /**
@@ -154,7 +220,7 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef USE_FULL_ASSERT
+#ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
@@ -163,7 +229,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
