@@ -42,7 +42,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+extern uint32_t timeNow100us;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

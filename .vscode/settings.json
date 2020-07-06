@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "main.h": "c"
-    }
+        "main.h": "c",
+        "usb_device.h": "c",
+        "usbd_def.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "Enabled"
 }

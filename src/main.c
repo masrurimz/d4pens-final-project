@@ -50,15 +50,21 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t str[] = "USART Transmit  DMA \r \n";
+uint8_t str[] = "str Transmit\r \n";
 uint8_t buffer[100];
 uint8_t bufferLen;
 uint8_t data2Send[6000];
 uint16_t data2SendLen = 0;
 uint8_t data2SendCnt = 0;
+
 volatile uint16_t adcRaw[8] = {0};
 float adcVolt[8] = {10, 10, 10, 10, 10, 10, 10, 10};
 float adcRatio = 5.0 / 4096.0;
+
+// Period Beteween Samples
+uint32_t timeNow100us = 0;
+uint32_t timePrev100us = 0;
+uint32_t timeElapsed100us = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -105,10 +111,11 @@ int main(void)
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_TIM3_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  // HAL_TIM_Base_Start(&htim2);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adcRaw, 8);
   HAL_TIM_Base_Start_IT(&htim3);
+  HAL_TIM_Base_Start_IT(&htim2);
   // HAL_TIM_OC_Start(&htim2, 1);
 
   /* USER CODE END 2 */
@@ -172,7 +179,8 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-  // HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
+  timeElapsed100us = timeNow100us - timePrev100us;
+  timePrev100us = timeNow100us;
   for (size_t i = 0; i < 8; i++)
   {
     adcVolt[i] = ((double)adcRaw[i]) * adcRatio;
@@ -180,13 +188,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
   bufferLen = sprintf_(
       (char *)buffer,
       "%lu,%u,%u,%u,%u,%u,%u,%u,%u;",
-      HAL_GetTick(),
+      timeElapsed100us,
       adcRaw[0], adcRaw[1], adcRaw[2], adcRaw[3],
       adcRaw[4], adcRaw[5], adcRaw[6], adcRaw[7]);
   strcat((char *)data2Send, (char *)buffer);
   data2SendLen += bufferLen;
   data2SendCnt++;
-  if (data2SendCnt > 49)
+  if (data2SendCnt > 0)
   {
     bufferLen = sprintf_((char *)buffer, "\n");
     strcat((char *)data2Send, (char *)buffer);
@@ -195,16 +203,18 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
     data2SendCnt = 0;
     data2SendLen = 0;
   }
-  // HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
+  HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
 }
 
 void HAL_UART_TxCpltCallback (UART_HandleTypeDef * huart)
 {
+  HAL_UART_DMAStop(&huart1);
   sprintf_((char *)data2Send, "");  //Reset Memory Buffer
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
+  
 }
 /* USER CODE END 4 */
 
