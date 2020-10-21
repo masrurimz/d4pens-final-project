@@ -30,6 +30,9 @@
 /* USER CODE BEGIN Includes */
 #include "printf.h"
 #include "string.h"
+#include "compression.h"
+#include "communication.h"
+#include "queue.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,14 +53,18 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-uint8_t str[] = "str Transmit\r \n";
-uint8_t buffer[100];
+// uint8_t str[] = "Halo\r \n";
+char buffer[100] = "";
 uint8_t bufferLen;
-uint8_t data2Send[6000];
+char data2Send[100];
 uint16_t data2SendLen = 0;
 uint8_t data2SendCnt = 0;
 
-volatile uint16_t adcRaw[8] = {0};
+volatile uint16_t adcRaw[8] = {
+  0, 2000, 3000, 4000,
+  600, 700, 800, 900 
+};
+
 float adcVolt[8] = {10, 10, 10, 10, 10, 10, 10, 10};
 float adcRatio = 5.0 / 4096.0;
 
@@ -65,6 +72,8 @@ float adcRatio = 5.0 / 4096.0;
 uint32_t timeNow100us = 0;
 uint32_t timePrev100us = 0;
 uint32_t timeElapsed100us = 0;
+
+char tes[] = "85";
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -87,7 +96,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -95,7 +103,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -113,18 +121,19 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adcRaw, 8);
-  HAL_TIM_Base_Start_IT(&htim3);
-  HAL_TIM_Base_Start_IT(&htim2);
-  // HAL_TIM_OC_Start(&htim2, 1);
-
+  HAL_GPIO_WritePin(pinLed_GPIO_Port, pinLed_Pin, GPIO_PIN_RESET);
+  commListening();
+  HAL_Delay(1000);
+  // HAL_ADC_Start_DMA(&hadc1, (uint32_t *)&adcRaw, 8);
+  // HAL_TIM_Base_Start_IT(&htim3);
+  // HAL_TIM_Base_Start_IT(&htim2);
+  HAL_GPIO_WritePin(pinLed_GPIO_Port, pinLed_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -157,8 +166,7 @@ void SystemClock_Config(void)
   }
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -177,44 +185,61 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-  timeElapsed100us = timeNow100us - timePrev100us;
-  timePrev100us = timeNow100us;
-  for (size_t i = 0; i < 8; i++)
-  {
-    adcVolt[i] = ((double)adcRaw[i]) * adcRatio;
-  }
-  bufferLen = sprintf_(
-      (char *)buffer,
-      "%lu,%u,%u,%u,%u,%u,%u,%u,%u;",
-      timeElapsed100us,
-      adcRaw[0], adcRaw[1], adcRaw[2], adcRaw[3],
-      adcRaw[4], adcRaw[5], adcRaw[6], adcRaw[7]);
-  strcat((char *)data2Send, (char *)buffer);
-  data2SendLen += bufferLen;
-  data2SendCnt++;
-  if (data2SendCnt > 0)
-  {
-    bufferLen = sprintf_((char *)buffer, "\n");
-    strcat((char *)data2Send, (char *)buffer);
-    data2SendLen += bufferLen;
-    HAL_UART_Transmit_DMA(&huart1, data2Send, data2SendLen);
-    data2SendCnt = 0;
-    data2SendLen = 0;
-  }
-  HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
+  commSendasBytes((uint16_t *)adcRaw, 8, 2);
+  // queueInsertTail((uint16_t *)adcRaw);
+
+  // timeElapsed100us = timeNow100us - timePrev100us;
+  // timePrev100us = timeNow100us;
+  // for (size_t i = 0; i < 8; i++)
+  // {
+  //   adcVolt[i] = ((double)adcRaw[i]) * adcRatio;
+  // }
+  
+  // data2SendLen += compressionEncoder(
+  //     buffer, bufferLen, data2Send, data2SendLen);
+  
+  // data2SendLen = 0;
+
+  // if(++data2SendCnt > 10){
+  //   data2SendCnt = 0;
+  //   sprintf_(buffer, "\n");
+  //   HAL_UART_Transmit_DMA(&huart1, (uint8_t *)buffer, 2);
+  // }
+
+  
+  // strcat((char *)data2Send, (char *)buffer);
+  // data2SendLen += bufferLen;
+  // data2SendCnt++;
+  // if (data2SendCnt > 0)
+  // {
+  //   // bufferLen = sprintf_((char *)buffer, "\n");
+  //   // strcat((char *)data2Send, (char *)buffer);
+  //   // data2SendLen += bufferLen;
+  //   HAL_UART_Transmit_DMA(&huart1, (uint8_t *)data2Send, data2SendLen);
+  //   data2SendCnt = 0;
+  //   data2SendLen = 0;
+  // }
+  // HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
 }
 
-void HAL_UART_TxCpltCallback (UART_HandleTypeDef * huart)
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
   HAL_UART_DMAStop(&huart1);
-  sprintf_((char *)data2Send, "");  //Reset Memory Buffer
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  
+  // adcRaw[0]++;
+  // commSendasBytes((uint16_t *)adcRaw, 8, 2);
+}
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  commRxHandler();
 }
 /* USER CODE END 4 */
 
@@ -230,7 +255,7 @@ void Error_Handler(void)
   /* USER CODE END Error_Handler_Debug */
 }
 
-#ifdef  USE_FULL_ASSERT
+#ifdef USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number
   *         where the assert_param error has occurred.
@@ -239,7 +264,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

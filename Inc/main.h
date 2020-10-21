@@ -43,6 +43,12 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 extern uint32_t timeNow100us;
+extern char buffer[100];
+extern uint8_t bufferLen;
+extern char data2Send[100];
+extern uint16_t data2SendLen;
+extern uint8_t data2SendCnt;
+extern volatile uint16_t adcRaw[8];
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
