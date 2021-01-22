@@ -56,9 +56,8 @@ void commADCData_SendasString()
 {
     data2SendLen = sprintf_(
         data2Send,
-        "%04u,%04u,%04u,%04u,%04u,%04u,%04u,%04u;",
-        adcRaw[0], adcRaw[1], adcRaw[2], adcRaw[3],
-        adcRaw[4], adcRaw[5], adcRaw[6], adcRaw[7]);
+        "%04u,%04u;",
+        adcRaw[0], adcRaw[1]);
     HAL_UART_Transmit_DMA(&huart1, (uint8_t *)data2Send, data2SendLen);
 }
 

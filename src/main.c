@@ -17,7 +17,6 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
@@ -60,12 +59,12 @@ char data2Send[100];
 uint16_t data2SendLen = 0;
 uint8_t data2SendCnt = 0;
 
-volatile uint16_t adcRaw[8] = {
-  0, 2000, 3000, 4000,
-  600, 700, 800, 900 
+volatile uint16_t adcRaw[2] = {
+    0,
+    2000,
 };
 
-float adcVolt[8] = {10, 10, 10, 10, 10, 10, 10, 10};
+float adcVolt[2] = {10, 10};
 float adcRatio = 5.0 / 4096.0;
 
 // Period Beteween Samples
@@ -103,7 +102,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -151,7 +150,8 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -164,7 +164,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
@@ -186,10 +186,9 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-  commSendasBytes((uint16_t *)adcRaw, 8, 2);
+  commSendasBytes((uint16_t *)adcRaw, 4, 2);
   // queueInsertTail((uint16_t *)adcRaw);
 
   // timeElapsed100us = timeNow100us - timePrev100us;
@@ -198,10 +197,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
   // {
   //   adcVolt[i] = ((double)adcRaw[i]) * adcRatio;
   // }
-  
+
   // data2SendLen += compressionEncoder(
   //     buffer, bufferLen, data2Send, data2SendLen);
-  
+
   // data2SendLen = 0;
 
   // if(++data2SendCnt > 10){
@@ -210,7 +209,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
   //   HAL_UART_Transmit_DMA(&huart1, (uint8_t *)buffer, 2);
   // }
 
-  
   // strcat((char *)data2Send, (char *)buffer);
   // data2SendLen += bufferLen;
   // data2SendCnt++;

@@ -42,15 +42,15 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-volatile uint16_t queueBuffer[500][8];
+volatile uint16_t queueBuffer[500][2];
 volatile uint16_t queueTail = 0;
 volatile uint16_t queueHead = 0;
 const uint16_t queueSize = 500 - 1;
 
 /* USER CODE END 0 */
-void queueInsertTail(uint16_t* d)
+void queueInsertTail(uint16_t *d)
 {
-    for (size_t i = 0; i < 8; i++)
+    for (size_t i = 0; i < 2; i++)
     {
         queueBuffer[queueTail][i] = d[i];
     }
@@ -64,7 +64,6 @@ void queueResetTail()
 {
     queueTail = 0;
 }
-
 
 /* USER CODE BEGIN 4 */
 

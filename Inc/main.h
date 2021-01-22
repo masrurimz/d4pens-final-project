@@ -24,40 +24,41 @@
 #define __MAIN_H
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
+  /* Private includes ----------------------------------------------------------*/
+  /* USER CODE BEGIN Includes */
 
-/* USER CODE END Includes */
+  /* USER CODE END Includes */
 
-/* Exported types ------------------------------------------------------------*/
-/* USER CODE BEGIN ET */
+  /* Exported types ------------------------------------------------------------*/
+  /* USER CODE BEGIN ET */
 
-/* USER CODE END ET */
+  /* USER CODE END ET */
 
-/* Exported constants --------------------------------------------------------*/
-/* USER CODE BEGIN EC */
-extern uint32_t timeNow100us;
-extern char buffer[100];
-extern uint8_t bufferLen;
-extern char data2Send[100];
-extern uint16_t data2SendLen;
-extern uint8_t data2SendCnt;
-extern volatile uint16_t adcRaw[8];
-/* USER CODE END EC */
+  /* Exported constants --------------------------------------------------------*/
+  /* USER CODE BEGIN EC */
+  extern uint32_t timeNow100us;
+  extern char buffer[100];
+  extern uint8_t bufferLen;
+  extern char data2Send[100];
+  extern uint16_t data2SendLen;
+  extern uint8_t data2SendCnt;
+  extern volatile uint16_t adcRaw[2];
+  /* USER CODE END EC */
 
-/* Exported macro ------------------------------------------------------------*/
-/* USER CODE BEGIN EM */
+  /* Exported macro ------------------------------------------------------------*/
+  /* USER CODE BEGIN EM */
 
-/* USER CODE END EM */
+  /* USER CODE END EM */
 
-/* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+  /* Exported functions prototypes ---------------------------------------------*/
+  void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
 
@@ -66,9 +67,9 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define pinLed_Pin GPIO_PIN_13
 #define pinLed_GPIO_Port GPIOC
-/* USER CODE BEGIN Private defines */
+  /* USER CODE BEGIN Private defines */
 
-/* USER CODE END Private defines */
+  /* USER CODE END Private defines */
 
 #ifdef __cplusplus
 }
