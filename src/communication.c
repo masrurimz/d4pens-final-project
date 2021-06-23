@@ -64,8 +64,8 @@ void commADCData_SendasString()
 /**
   * @brief  Send data to the UART using DMA controller as Bytes
   * @param  data  Pointer to a data to be send
-  * @param  dataLen Langth of data variable to be sent
-  * @param  dataByteSize Sigle variable size in bytes
+  * @param  dataLen Data array length
+  * @param  dataByteSize Variable dataType length in bytes
   * @retval none
   */
 void commSendasBytes(uint16_t *data, uint32_t dataLen, uint8_t dataByteSize)
