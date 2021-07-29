@@ -188,40 +188,7 @@ void SystemClock_Config(void)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef *hadc)
 {
-  commSendasBytes((uint16_t *)adcRaw, 4, 2);
-  // queueInsertTail((uint16_t *)adcRaw);
-
-  // timeElapsed100us = timeNow100us - timePrev100us;
-  // timePrev100us = timeNow100us;
-  // for (size_t i = 0; i < 8; i++)
-  // {
-  //   adcVolt[i] = ((double)adcRaw[i]) * adcRatio;
-  // }
-
-  // data2SendLen += compressionEncoder(
-  //     buffer, bufferLen, data2Send, data2SendLen);
-
-  // data2SendLen = 0;
-
-  // if(++data2SendCnt > 10){
-  //   data2SendCnt = 0;
-  //   sprintf_(buffer, "\n");
-  //   HAL_UART_Transmit_DMA(&huart1, (uint8_t *)buffer, 2);
-  // }
-
-  // strcat((char *)data2Send, (char *)buffer);
-  // data2SendLen += bufferLen;
-  // data2SendCnt++;
-  // if (data2SendCnt > 0)
-  // {
-  //   // bufferLen = sprintf_((char *)buffer, "\n");
-  //   // strcat((char *)data2Send, (char *)buffer);
-  //   // data2SendLen += bufferLen;
-  //   HAL_UART_Transmit_DMA(&huart1, (uint8_t *)data2Send, data2SendLen);
-  //   data2SendCnt = 0;
-  //   data2SendLen = 0;
-  // }
-  // HAL_GPIO_TogglePin(pinLed_GPIO_Port, pinLed_Pin);
+  commSendasBytes((uint16_t *)&adcRaw, 2, 2);
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -231,8 +198,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  // adcRaw[0]++;
-  // commSendasBytes((uint16_t *)adcRaw, 8, 2);
+
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

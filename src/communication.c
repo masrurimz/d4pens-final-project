@@ -96,7 +96,7 @@ void commMainHandler()
 {
     if (commCommand == 'g')
     {
-        HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcRaw, 8);
+        HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcRaw, 2);
         HAL_TIM_Base_Start_IT(&htim3);
         // data2SendLen = queueTail * 8;
         // commSendasBytes((uint16_t *)queueBuffer, data2SendLen, 2);
