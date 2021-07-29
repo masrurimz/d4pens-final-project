@@ -10,7 +10,6 @@
 #include "communication.h"
 #include "usart.h"
 #include "printf.h"
-#include "queue.h"
 #include "adc.h"
 #include "tim.h"
 
@@ -86,8 +85,6 @@ void commListening()
 void commRxHandler()
 {
     commCommand = commRxData;
-    // HAL_UART_Transmit(&huart1, (uint8_t *)commBuffer,
-    //                   sprintf_(commBuffer, "%c", commRxData), 1);
     commListening();
     commMainHandler();
 }
@@ -98,16 +95,13 @@ void commMainHandler()
     {
         HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adcRaw, 2);
         HAL_TIM_Base_Start_IT(&htim3);
-        // data2SendLen = queueTail * 8;
-        // commSendasBytes((uint16_t *)queueBuffer, data2SendLen, 2);
-        // queueResetTail();
+        
         HAL_GPIO_WritePin(pinLed_GPIO_Port, pinLed_Pin, GPIO_PIN_RESET);
     }
     else if (commCommand == 's')
     {
         HAL_TIM_Base_Stop_IT(&htim3);
         HAL_ADC_Stop_DMA(&hadc1);
-        queueResetTail();
         HAL_GPIO_WritePin(pinLed_GPIO_Port, pinLed_Pin, GPIO_PIN_SET);
     }
 }
